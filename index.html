@@ -175,37 +175,112 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
 /* ── Hamburger ── */
-.hamburger{display:none;width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;align-items:center;justify-content:center;font-size:20px;color:var(--text);flex-shrink:0}
+.hamburger{display:none;width:40px;height:40px;border:none;background:none;cursor:pointer;border-radius:8px;align-items:center;justify-content:center;font-size:22px;color:var(--text);flex-shrink:0}
 .hamburger:hover{background:var(--bg)}
 
 /* ── Sidebar overlay (mobile backdrop) ── */
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
 .sidebar-overlay.open{display:block}
 
+/* ── Bottom Navigation (mobile only) ── */
+.bottom-nav{display:none}
+.bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;border:none;background:none;font-family:inherit;transition:.15s;-webkit-tap-highlight-color:transparent}
+.bottom-nav-item.active{color:var(--primary-dark)}
+.bottom-nav-item.active .bottom-nav-icon{transform:scale(1.1)}
+.bottom-nav-icon{font-size:22px;line-height:1;transition:.15s}
+
+/* ── FAB (mobile only) ── */
+.fab{display:none;position:fixed;bottom:76px;right:18px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;font-size:26px;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(99,102,241,.45);z-index:140;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.fab:active{transform:scale(.92);box-shadow:0 2px 8px rgba(99,102,241,.35)}
+
 /* ── Responsive ── */
 @media(max-width:768px){
+  /* Layout */
   .hamburger{display:flex}
-  .sidebar{transform:translateX(-100%);transition:transform .25s ease;z-index:200}
+  .sidebar{transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:200}
   .sidebar.open{transform:translateX(0)}
   .main{margin-left:0}
-  .content{padding:16px}
-  .topbar{padding:0 14px}
+  .content{padding:16px 14px 82px}
+  .topbar{padding:0 10px;height:52px}
+  .topbar-title{font-size:15px}
+
+  /* Sync badge — hide on mobile (available in settings) */
+  .sync-badge{display:none}
+
+  /* Stats */
   .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:14px 12px}
+  .stat-value{font-size:22px}
+  .stat-label{font-size:10px}
+
+  /* Grids */
   .grid-2{grid-template-columns:1fr}
   .form-row{grid-template-columns:1fr}
   .courses-grid{grid-template-columns:1fr}
-  .filter-bar{gap:5px}
-  .filter-btn{padding:5px 10px;font-size:11px}
-  .search-box{max-width:100%;width:100%}
-  .topbar-title{font-size:15px}
-  .mat-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .mat-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+
+  /* Filter bar — horizontal scroll, no wrap */
+  .filter-bar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;gap:6px;scrollbar-width:none;margin-bottom:14px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .filter-btn{flex-shrink:0;padding:7px 14px;font-size:12px;min-height:36px}
+  .search-box{min-width:160px;max-width:100%;font-size:16px;width:100%}
+
+  /* Task items — larger touch targets */
+  .task-item{padding:13px 14px;gap:12px}
+  .task-check{width:26px;height:26px;font-size:13px;flex-shrink:0}
+  .task-title{font-size:14px}
+  .task-meta{gap:5px;margin-top:4px}
+  .task-actions .icon-btn{width:36px;height:36px;font-size:16px}
+
+  /* Form inputs — 16px prevents iOS auto-zoom */
+  .form-input,.form-select,.form-textarea{font-size:16px;padding:11px 12px}
+
+  /* Modal — bottom sheet */
+  .overlay{align-items:flex-end}
+  .modal{
+    width:100%;max-width:100%;
+    border-radius:20px 20px 0 0;
+    padding:8px 20px 32px;
+    max-height:90vh;
+    box-shadow:0 -4px 30px rgba(0,0,0,.15);
+  }
+  .modal-handle{display:block;width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;flex-shrink:0}
+  .modal-title{font-size:16px}
+  .modal-footer{position:sticky;bottom:0;background:var(--surface);padding-top:12px;margin-top:12px}
+  .modal-footer .btn{flex:1;justify-content:center;padding:12px}
+
+  /* Setup banner */
   .setup-banner{flex-direction:column;align-items:flex-start;gap:10px}
-  .modal{padding:18px;width:95%}
+
+  /* Settings */
+  .settings-row{flex-direction:column;align-items:flex-start;gap:10px}
+  .settings-row .btn,.settings-row label.btn{width:100%;justify-content:center;padding:12px}
+
+  /* Bottom nav */
+  .bottom-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--surface);
+    border-top:1px solid var(--border);
+    z-index:150;
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    box-shadow:0 -2px 14px rgba(0,0,0,.07);
+  }
+
+  /* FAB */
+  .fab{display:flex}
+
+  /* Viewer full screen on mobile */
+  .viewer{width:100%;max-width:100%;border-radius:20px 20px 0 0;max-height:95vh}
+  .viewer-body iframe{height:65vh}
 }
+
 @media(max-width:480px){
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-value{font-size:22px}
-  .task-item{padding:10px 12px}
+  .content{padding:12px 12px 82px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-value{font-size:20px}
+  .mat-grid{grid-template-columns:repeat(2,1fr)}
+  .badge{font-size:9px;padding:2px 6px}
 }
 </style>
 </head>
@@ -213,6 +288,28 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 
 <!-- Sidebar overlay (mobile backdrop) -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Bottom Navigation (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+    <span class="bottom-nav-icon">🏠</span>ホーム
+  </button>
+  <button class="bottom-nav-item" data-page="tasks" onclick="navigate('tasks')">
+    <span class="bottom-nav-icon">✅</span>課題
+  </button>
+  <button class="bottom-nav-item" data-page="materials" onclick="navigate('materials')">
+    <span class="bottom-nav-icon">📁</span>資料
+  </button>
+  <button class="bottom-nav-item" data-page="courses" onclick="navigate('courses')">
+    <span class="bottom-nav-icon">📚</span>科目
+  </button>
+  <button class="bottom-nav-item" data-page="settings" onclick="navigate('settings')">
+    <span class="bottom-nav-icon">⚙️</span>設定
+  </button>
+</nav>
+
+<!-- FAB (mobile) -->
+<button class="fab hidden" id="fab" onclick="onFabClick()">＋</button>
 
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
@@ -264,6 +361,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <!-- Course Modal -->
 <div class="overlay hidden" id="course-modal">
   <div class="modal">
+    <span class="modal-handle"></span>
     <div class="modal-title" id="course-modal-title">科目を追加</div>
     <input type="hidden" id="course-edit-id">
     <div class="form-row">
@@ -311,6 +409,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <!-- Task Modal -->
 <div class="overlay hidden" id="task-modal">
   <div class="modal">
+    <span class="modal-handle"></span>
     <div class="modal-title" id="task-modal-title">課題を追加</div>
     <input type="hidden" id="task-edit-id">
     <div class="form-group">
@@ -361,6 +460,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <!-- Material Modal -->
 <div class="overlay hidden" id="mat-modal">
   <div class="modal">
+    <span class="modal-handle"></span>
     <div class="modal-title">資料を追加</div>
     <div class="form-group">
       <label class="form-label">科目</label>
@@ -403,6 +503,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <!-- Confirm Modal -->
 <div class="overlay hidden" id="confirm-modal">
   <div class="modal" style="max-width:360px">
+    <span class="modal-handle"></span>
     <div class="modal-title" id="confirm-title">確認</div>
     <p id="confirm-msg" style="color:var(--muted);font-size:13px"></p>
     <div class="modal-footer">
@@ -611,17 +712,38 @@ function navigate(page){
   document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
     el.classList.toggle('active',el.dataset.page===page);
   });
+  document.querySelectorAll('.bottom-nav-item[data-page]').forEach(el=>{
+    el.classList.toggle('active',el.dataset.page===page);
+  });
   document.getElementById('page-title').textContent=PAGE_TITLES[page]||page;
   renderTopbarActions();
   renderContent();
+  updateFab(page);
   if(window.innerWidth<=768) closeSidebar();
+}
+
+function updateFab(page){
+  const fab=document.getElementById('fab');
+  if(!fab) return;
+  if(page==='tasks'){fab.textContent='＋';fab.classList.remove('hidden')}
+  else if(page==='materials'){fab.textContent='＋';fab.classList.remove('hidden')}
+  else if(page==='courses'){fab.textContent='＋';fab.classList.remove('hidden')}
+  else{fab.classList.add('hidden')}
+}
+
+function onFabClick(){
+  const p=state.page;
+  if(p==='tasks') openTaskModal();
+  else if(p==='materials') openMatModal();
+  else if(p==='courses') openModal('course-modal');
 }
 
 function renderTopbarActions(){
   const el=document.getElementById('topbar-actions');
   const p=state.page;
-  if(p==='tasks')     el.innerHTML=`<button class="btn btn-primary" onclick="openTaskModal()">＋ 課題を追加</button>`;
-  else if(p==='materials') el.innerHTML=`<button class="btn btn-primary" onclick="openMatModal()">＋ 資料を追加</button>`;
+  const isMobile=window.innerWidth<=768;
+  if(p==='tasks')     el.innerHTML=isMobile?'':`<button class="btn btn-primary" onclick="openTaskModal()">＋ 課題を追加</button>`;
+  else if(p==='materials') el.innerHTML=isMobile?'':`<button class="btn btn-primary" onclick="openMatModal()">＋ 資料を追加</button>`;
   else if(p==='courses')   el.innerHTML=`<button class="btn btn-primary" onclick="openCourseModal()">＋ 科目を追加</button>`;
   else el.innerHTML='';
 }
