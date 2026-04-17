@@ -924,6 +924,31 @@ function renderSettings(){
         </div>`:''}
       </div>
 
+      <!-- Data Export / Import -->
+      <div class="settings-section">
+        <div class="settings-section-title">💾 データのエクスポート／インポート</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          ローカル版のデータをJSONファイルに書き出し、GitHub Pages版に引き継ぐことができます。
+        </p>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">エクスポート</div>
+            <div class="settings-sub">科目・課題データをJSONファイルとしてダウンロード</div>
+          </div>
+          <button class="btn btn-secondary" onclick="exportData()">⬇️ エクスポート</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">インポート</div>
+            <div class="settings-sub">エクスポートしたJSONファイルを読み込む（現在のデータは上書きされます）</div>
+          </div>
+          <label class="btn btn-secondary" style="cursor:pointer">
+            ⬆️ インポート
+            <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+          </label>
+        </div>
+      </div>
+
       <!-- Step 2: config.json -->
       <div class="settings-section">
         <div class="settings-section-title">📧 ステップ2 — メール設定ファイルを編集</div>
@@ -961,6 +986,43 @@ function renderSettings(){
 
     </div>
   `;
+}
+
+function exportData(){
+  const payload={
+    courses:  state.courses,
+    tasks:    state.tasks,
+    exportedAt: new Date().toISOString()
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='dashboard-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.courses||!data.tasks) throw new Error('形式が正しくありません');
+      if(!confirm(`科目 ${data.courses.length}件・課題 ${data.tasks.length}件を読み込みます。\n現在のデータは上書きされます。よろしいですか？`)) return;
+      state.courses  = data.courses;
+      state.tasks    = data.tasks;
+      saveState();
+      renderCourseNav();
+      renderContent();
+      alert('インポートが完了しました！');
+    } catch(err){
+      alert('インポート失敗: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
 }
 
 function testNotify(){
