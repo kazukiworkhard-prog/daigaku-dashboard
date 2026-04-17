@@ -1,0 +1,1160 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大学授業ダッシュボード</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#6366f1;--primary-dark:#4f46e5;--primary-light:#e0e7ff;
+  --bg:#f1f5f9;--surface:#fff;--border:#e2e8f0;
+  --text:#1e293b;--muted:#64748b;
+  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;
+  --sidebar:220px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
+.logo{padding:18px 16px;font-size:15px;font-weight:700;color:var(--primary-dark);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.logo-icon{font-size:22px}
+.nav{padding:12px 8px;flex:1}
+.nav-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:500;transition:.15s;margin-bottom:1px;font-size:13px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--primary-light);color:var(--primary-dark)}
+.nav-icon{font-size:16px;width:18px;text-align:center}
+.course-nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:500;transition:.15s;border:none;background:none;width:100%;text-align:left}
+.course-nav-item:hover{background:var(--bg);color:var(--text)}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Main ── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:17px;font-weight:700}
+.sync-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:.15s}
+.sync-ok{background:#f0fdf4;color:#166534}.sync-ok:hover{background:#dcfce7}
+.sync-ng{background:#fef2f2;color:var(--danger)}.sync-ng:hover{background:#fee2e2}
+.sync-none{background:var(--bg);color:var(--muted)}.sync-none:hover{background:var(--border)}
+.content{padding:24px}
+
+/* ── Setup banner ── */
+.setup-banner{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.setup-banner-text{flex:1;font-size:13px;color:#92400e}
+.setup-banner-text strong{display:block;margin-bottom:2px;font-size:14px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:.15s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:#fef2f2;color:var(--danger);border:1px solid #fecaca}.btn-danger:hover{background:#fee2e2}
+.btn-ghost{background:none;color:var(--muted);padding:8px 10px}.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.icon-btn{width:30px;height:30px;border-radius:6px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--muted);transition:.15s}
+.icon-btn:hover{background:var(--bg);color:var(--text)}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600}
+
+/* ── Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.stat-value{font-size:26px;font-weight:700;color:var(--primary-dark)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── Task list ── */
+.task-list{display:flex;flex-direction:column;gap:7px}
+.task-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface);transition:.15s;position:relative}
+.task-item:hover{border-color:var(--primary);box-shadow:0 1px 4px rgba(99,102,241,.1)}
+.task-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:.15s}
+.task-check:hover{border-color:var(--primary)}
+.task-check.done{background:var(--success);border-color:var(--success);color:#fff}
+.task-check.in-progress{background:#fff7ed;border-color:var(--warning)}
+.task-info{flex:1;min-width:0}
+.task-title{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-title.done{text-decoration:line-through;color:var(--muted)}
+.task-meta{display:flex;gap:7px;margin-top:3px;align-items:center;flex-wrap:wrap}
+.task-actions{display:flex;gap:2px;flex-shrink:0}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.badge-course{background:var(--primary-light);color:var(--primary-dark)}
+.badge-overdue{background:#fef2f2;color:var(--danger)}
+.badge-soon{background:#fffbeb;color:#92400e}
+.badge-ok{background:#f0fdf4;color:#166534}
+.badge-notset{background:var(--bg);color:var(--muted)}
+.pdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.p-high{background:var(--danger)}.p-medium{background:var(--warning)}.p-low{background:var(--success)}
+
+/* ── Filter bar ── */
+.filter-bar{display:flex;gap:7px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-btn{padding:5px 13px;border-radius:99px;font-size:12px;font-weight:500;border:1px solid var(--border);cursor:pointer;background:var(--surface);color:var(--muted);transition:.15s;font-family:inherit}
+.filter-btn:hover{background:var(--bg)}
+.filter-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.search-box{padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:var(--surface);font-family:inherit;flex:1;max-width:280px;transition:.15s}
+.search-box:focus{border-color:var(--primary)}
+
+/* ── Materials ── */
+.materials-section{margin-bottom:28px}
+.materials-section-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.mat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:.15s;position:relative}
+.mat-card:hover{border-color:var(--primary);box-shadow:0 2px 8px rgba(99,102,241,.1)}
+.mat-icon{font-size:28px;margin-bottom:8px}
+.mat-name{font-weight:500;font-size:12px;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:4px}
+.mat-meta{font-size:10px;color:var(--muted)}
+.mat-del{position:absolute;top:8px;right:8px}
+
+/* ── Courses ── */
+.courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.course-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;border-left:4px solid}
+.course-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.course-name{font-weight:700;font-size:15px}
+.course-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.course-stats-row{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.cstat{text-align:center}.cstat-val{font-size:18px;font-weight:700}.cstat-label{font-size:10px;color:var(--muted)}
+
+/* ── Settings ── */
+.settings-section{margin-bottom:28px}
+.settings-section-title{font-size:15px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:13px;font-weight:500}
+.settings-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.step-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.step-list li{display:flex;gap:12px;align-items:flex-start;font-size:13px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.code-block{background:#1e293b;color:#e2e8f0;border-radius:8px;padding:14px 16px;font-family:monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;margin-top:8px}
+
+/* ── Grid ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(2px)}
+.modal{background:var(--surface);border-radius:16px;padding:24px;width:90%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:18px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.form-input,.form-select,.form-textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;font-family:inherit;background:var(--surface);color:var(--text);transition:.15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary)}
+.form-textarea{resize:vertical;min-height:75px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Drop zone ── */
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:.15s;color:var(--muted)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--primary);background:var(--primary-light);color:var(--primary-dark)}
+.drop-icon{font-size:32px;margin-bottom:6px}
+
+/* ── Viewer ── */
+.viewer{background:var(--surface);border-radius:16px;width:95%;max-width:900px;max-height:95vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.viewer-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.viewer-title{font-weight:600;font-size:14px;max-width:600px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer-body{flex:1;overflow:auto}
+.viewer-body iframe{width:100%;height:72vh;border:none;border-radius:0 0 4px 4px}
+.viewer-no-preview{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:var(--muted);gap:10px}
+.viewer-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:10px}
+.empty-text{font-size:14px;font-weight:500;margin-bottom:5px;color:var(--text)}
+.empty-sub{font-size:12px}
+
+/* ── Misc ── */
+.sep{height:1px;background:var(--border);margin:18px 0}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:16px;font-weight:700}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── Hamburger ── */
+.hamburger{display:none;width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;align-items:center;justify-content:center;font-size:20px;color:var(--text);flex-shrink:0}
+.hamburger:hover{background:var(--bg)}
+
+/* ── Sidebar overlay (mobile backdrop) ── */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+.sidebar-overlay.open{display:block}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .hamburger{display:flex}
+  .sidebar{transform:translateX(-100%);transition:transform .25s ease;z-index:200}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .content{padding:16px}
+  .topbar{padding:0 14px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .grid-2{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .courses-grid{grid-template-columns:1fr}
+  .filter-bar{gap:5px}
+  .filter-btn{padding:5px 10px;font-size:11px}
+  .search-box{max-width:100%;width:100%}
+  .topbar-title{font-size:15px}
+  .mat-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .setup-banner{flex-direction:column;align-items:flex-start;gap:10px}
+  .modal{padding:18px;width:95%}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-value{font-size:22px}
+  .task-item{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar overlay (mobile backdrop) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo"><span class="logo-icon">🎓</span>授業ダッシュボード</div>
+  <nav class="nav">
+    <div class="nav-label">メニュー</div>
+    <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+      <span class="nav-icon">🏠</span>ダッシュボード
+    </button>
+    <button class="nav-item" data-page="tasks" onclick="navigate('tasks')">
+      <span class="nav-icon">✅</span>課題管理
+    </button>
+    <button class="nav-item" data-page="materials" onclick="navigate('materials')">
+      <span class="nav-icon">📁</span>資料管理
+    </button>
+    <button class="nav-item" data-page="courses" onclick="navigate('courses')">
+      <span class="nav-icon">📚</span>科目管理
+    </button>
+    <button class="nav-item" data-page="settings" onclick="navigate('settings')">
+      <span class="nav-icon">⚙️</span>通知設定
+    </button>
+
+    <div class="nav-label" style="margin-top:12px">科目</div>
+    <div id="course-nav"></div>
+    <button class="nav-item" style="color:var(--primary);font-size:12px" onclick="openModal('course-modal')">
+      <span class="nav-icon">＋</span>科目を追加
+    </button>
+  </nav>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="メニューを開く">☰</button>
+      <div class="topbar-title" id="page-title">ダッシュボード</div>
+      <button class="sync-badge sync-none" id="sync-badge" onclick="navigate('settings')" title="同期状態">
+        ● 同期未設定
+      </button>
+    </div>
+    <div style="display:flex;gap:8px" id="topbar-actions"></div>
+  </header>
+
+  <div class="content" id="content"></div>
+</div>
+
+<!-- ===== Modals ===== -->
+
+<!-- Course Modal -->
+<div class="overlay hidden" id="course-modal">
+  <div class="modal">
+    <div class="modal-title" id="course-modal-title">科目を追加</div>
+    <input type="hidden" id="course-edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">科目名 *</label>
+        <input class="form-input" id="course-name" placeholder="例: 社会学概論">
+      </div>
+      <div class="form-group">
+        <label class="form-label">カラー</label>
+        <select class="form-select" id="course-color">
+          <option value="#6366f1">インディゴ</option>
+          <option value="#ec4899">ピンク</option>
+          <option value="#f59e0b">アンバー</option>
+          <option value="#10b981">エメラルド</option>
+          <option value="#3b82f6">ブルー</option>
+          <option value="#8b5cf6">バイオレット</option>
+          <option value="#ef4444">レッド</option>
+          <option value="#06b6d4">シアン</option>
+          <option value="#f97316">オレンジ</option>
+          <option value="#84cc16">ライム</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">担当教員</label>
+        <input class="form-input" id="course-prof" placeholder="例: 田中 太郎">
+      </div>
+      <div class="form-group">
+        <label class="form-label">曜日・時限</label>
+        <input class="form-input" id="course-slot" placeholder="例: 月曜3限">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <textarea class="form-textarea" id="course-note" placeholder="教室、連絡先など"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('course-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveCourse()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="overlay hidden" id="task-modal">
+  <div class="modal">
+    <div class="modal-title" id="task-modal-title">課題を追加</div>
+    <input type="hidden" id="task-edit-id">
+    <div class="form-group">
+      <label class="form-label">課題名 *</label>
+      <input class="form-input" id="task-title-input" placeholder="例: レポート第2回">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">科目</label>
+        <select class="form-select" id="task-course">
+          <option value="">-- 科目を選択 --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">優先度</label>
+        <select class="form-select" id="task-priority">
+          <option value="medium">中</option>
+          <option value="high">高</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">締切日</label>
+        <input class="form-input" type="date" id="task-due">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ステータス</label>
+        <select class="form-select" id="task-status">
+          <option value="todo">未着手</option>
+          <option value="in-progress">進行中</option>
+          <option value="done">完了</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <textarea class="form-textarea" id="task-note" placeholder="詳細・備考"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('task-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveTask()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Material Modal -->
+<div class="overlay hidden" id="mat-modal">
+  <div class="modal">
+    <div class="modal-title">資料を追加</div>
+    <div class="form-group">
+      <label class="form-label">科目</label>
+      <select class="form-select" id="mat-course">
+        <option value="">-- 科目を選択 --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ファイル</label>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">📂</div>
+        <div style="font-size:13px;font-weight:500">クリックまたはドラッグ＆ドロップ</div>
+        <div style="font-size:11px;margin-top:4px">PDF, Word, Excel, PowerPoint, 画像など</div>
+      </div>
+      <input type="file" id="file-input" multiple style="display:none" accept="*/*">
+    </div>
+    <div id="selected-files" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('mat-modal');clearFileSelection()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveMaterials()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Viewer Modal -->
+<div class="overlay hidden" id="viewer-modal">
+  <div class="viewer">
+    <div class="viewer-head">
+      <span class="viewer-title" id="viewer-title"></span>
+      <button class="icon-btn" onclick="closeModal('viewer-modal')">✕</button>
+    </div>
+    <div class="viewer-body" id="viewer-body"></div>
+    <div class="viewer-foot">
+      <button class="btn btn-secondary" id="viewer-dl-btn">⬇ ダウンロード</button>
+      <button class="btn btn-secondary" onclick="closeModal('viewer-modal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="overlay hidden" id="confirm-modal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title" id="confirm-title">確認</div>
+    <p id="confirm-msg" style="color:var(--muted);font-size:13px"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirm-modal')">キャンセル</button>
+      <button class="btn btn-danger" id="confirm-ok">削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// IndexedDB  (v2: files + handles stores)
+// ══════════════════════════════════════════
+let idb;
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('UniDashDB',2);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('files'))   db.createObjectStore('files',{keyPath:'id'});
+      if(!db.objectStoreNames.contains('handles')) db.createObjectStore('handles',{keyPath:'id'});
+    };
+    req.onsuccess=e=>{idb=e.target.result;res(idb)};
+    req.onerror=e=>rej(e);
+  });
+}
+const dbTx=(store,mode,fn)=>new Promise((res,rej)=>{
+  const tx=idb.transaction(store,mode);
+  const s=tx.objectStore(store);
+  const req=fn(s);
+  req.onsuccess=e=>res(e.target.result);
+  req.onerror=rej;
+});
+const dbPut  =(store,data)=>dbTx(store,'readwrite',s=>s.put(data));
+const dbGet  =(store,id)  =>dbTx(store,'readonly', s=>s.get(id));
+const dbDel  =(store,id)  =>dbTx(store,'readwrite',s=>s.delete(id));
+
+// ══════════════════════════════════════════
+// State & Storage
+// ══════════════════════════════════════════
+const LS={
+  get(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))}
+};
+
+let state={
+  page:'dashboard',
+  courses:[],tasks:[],materials:[],
+  taskFilter:'all',taskSearch:'',matFilter:'all',
+};
+
+function loadState(){
+  state.courses  = LS.get('courses')  || [];
+  state.tasks    = LS.get('tasks')    || [];
+  state.materials= LS.get('materials')|| [];
+}
+function saveState(){
+  LS.set('courses',  state.courses);
+  LS.set('tasks',    state.tasks);
+  LS.set('materials',state.materials);
+  syncToFile();   // async – fire and forget
+}
+
+// ══════════════════════════════════════════
+// File System Sync (data.json)
+// ══════════════════════════════════════════
+let dirHandle=null;
+
+async function loadDirHandle(){
+  try{
+    const rec=await dbGet('handles','dir');
+    if(!rec) return;
+    dirHandle=rec.handle;
+    // re-verify permission (persisted handles need it after browser restart)
+    const perm=await dirHandle.queryPermission({mode:'readwrite'});
+    if(perm!=='granted'){
+      // silent – will request on next user interaction if needed
+      updateSyncBadge('none');
+    } else {
+      updateSyncBadge('ok');
+    }
+  } catch(e){ dirHandle=null; }
+}
+
+async function setupDirectory(){
+  try{
+    const h=await window.showDirectoryPicker({mode:'readwrite',startIn:'downloads'});
+    dirHandle=h;
+    await dbPut('handles',{id:'dir',handle:h});
+    updateSyncBadge('ok');
+    await syncToFile();
+    renderContent(); // refresh settings page
+  } catch(e){
+    if(e.name!=='AbortError') console.warn('フォルダ選択失敗:',e);
+  }
+}
+
+async function syncToFile(){
+  if(!dirHandle) return;
+  try{
+    const perm=await dirHandle.queryPermission({mode:'readwrite'});
+    if(perm!=='granted'){
+      const req=await dirHandle.requestPermission({mode:'readwrite'});
+      if(req!=='granted'){updateSyncBadge('ng');return}
+    }
+    // Write data.json (exclude file blobs – only metadata)
+    const payload={
+      courses:  state.courses,
+      tasks:    state.tasks,
+      materials:state.materials.map(m=>({...m})),  // no blob
+      exportedAt: new Date().toISOString()
+    };
+    const fh=await dirHandle.getFileHandle('data.json',{create:true});
+    const wr=await fh.createWritable();
+    await wr.write(JSON.stringify(payload,null,2));
+    await wr.close();
+    updateSyncBadge('ok');
+  } catch(e){
+    console.warn('同期失敗:',e);
+    updateSyncBadge('ng');
+  }
+}
+
+function updateSyncBadge(status){
+  const el=document.getElementById('sync-badge');
+  el.className='sync-badge';
+  if(status==='ok'){
+    el.classList.add('sync-ok');
+    el.textContent='✓ 同期済み';
+  } else if(status==='ng'){
+    el.classList.add('sync-ng');
+    el.textContent='⚠ 同期エラー';
+  } else {
+    el.classList.add('sync-none');
+    el.textContent='● 同期未設定';
+  }
+}
+
+// ══════════════════════════════════════════
+// Helpers
+// ══════════════════════════════════════════
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function getCourse(id){return state.courses.find(c=>c.id===id)}
+
+function dueBadge(dateStr){
+  if(!dateStr) return '<span class="badge badge-notset">期日未設定</span>';
+  const due=new Date(dateStr);due.setHours(23,59,59);
+  const diff=Math.ceil((due-new Date())/(864e5));
+  if(diff<0)  return `<span class="badge badge-overdue">期限切れ ${Math.abs(diff)}日前</span>`;
+  if(diff===0) return `<span class="badge badge-soon">今日が締切</span>`;
+  if(diff<=3)  return `<span class="badge badge-soon">あと${diff}日</span>`;
+  return `<span class="badge badge-ok">あと${diff}日</span>`;
+}
+
+function priorityDot(p){
+  const cls=p==='high'?'p-high':p==='low'?'p-low':'p-medium';
+  return `<span class="pdot ${cls}"></span>`;
+}
+
+function fileIcon(type=''){
+  if(type.includes('pdf')) return '📄';
+  if(type.includes('word')||type.includes('document')) return '📝';
+  if(type.includes('excel')||type.includes('spreadsheet')||type.includes('sheet')) return '📊';
+  if(type.includes('powerpoint')||type.includes('presentation')) return '📊';
+  if(type.includes('image')) return '🖼️';
+  if(type.includes('text')) return '📃';
+  return '📎';
+}
+
+function fmtSize(bytes){
+  if(bytes<1024) return bytes+'B';
+  if(bytes<1048576) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/1048576).toFixed(1)+'MB';
+}
+
+function fmtDate(str){
+  if(!str) return '';
+  return new Date(str).toLocaleDateString('ja-JP',{month:'short',day:'numeric'});
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════
+// Navigation
+// ══════════════════════════════════════════
+const PAGE_TITLES={
+  dashboard:'ダッシュボード',tasks:'課題管理',
+  materials:'資料管理',courses:'科目管理',settings:'通知設定'
+};
+
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sidebar-overlay');
+  sb.classList.toggle('open');
+  ov.classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+function navigate(page){
+  state.page=page;
+  document.querySelectorAll('.nav-item[data-page]').forEach(el=>{
+    el.classList.toggle('active',el.dataset.page===page);
+  });
+  document.getElementById('page-title').textContent=PAGE_TITLES[page]||page;
+  renderTopbarActions();
+  renderContent();
+  if(window.innerWidth<=768) closeSidebar();
+}
+
+function renderTopbarActions(){
+  const el=document.getElementById('topbar-actions');
+  const p=state.page;
+  if(p==='tasks')     el.innerHTML=`<button class="btn btn-primary" onclick="openTaskModal()">＋ 課題を追加</button>`;
+  else if(p==='materials') el.innerHTML=`<button class="btn btn-primary" onclick="openMatModal()">＋ 資料を追加</button>`;
+  else if(p==='courses')   el.innerHTML=`<button class="btn btn-primary" onclick="openCourseModal()">＋ 科目を追加</button>`;
+  else el.innerHTML='';
+}
+
+function renderContent(){
+  const p=state.page;
+  if(p==='dashboard') renderDashboard();
+  else if(p==='tasks') renderTasks();
+  else if(p==='materials') renderMaterials();
+  else if(p==='courses') renderCourses();
+  else if(p==='settings') renderSettings();
+}
+
+// ══════════════════════════════════════════
+// Sidebar course nav
+// ══════════════════════════════════════════
+function renderCourseNav(){
+  const el=document.getElementById('course-nav');
+  if(!state.courses.length){el.innerHTML='';return}
+  el.innerHTML=state.courses.map(c=>`
+    <button class="course-nav-item" onclick="filterByCourse('${c.id}')">
+      <span class="cdot" style="background:${c.color}"></span>
+      <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.name)}</span>
+    </button>`).join('');
+}
+
+function filterByCourse(id){state.matFilter=id;navigate('materials')}
+
+// ══════════════════════════════════════════
+// Dashboard
+// ══════════════════════════════════════════
+function renderDashboard(){
+  const tasks=state.tasks;
+  const total=tasks.length;
+  const done=tasks.filter(t=>t.status==='done').length;
+  const pending=tasks.filter(t=>t.status!=='done').length;
+  const overdue=tasks.filter(t=>t.status!=='done'&&t.due&&new Date(t.due)<new Date()).length;
+
+  const upcoming=tasks
+    .filter(t=>t.status!=='done'&&t.due)
+    .sort((a,b)=>new Date(a.due)-new Date(b.due))
+    .slice(0,6);
+
+  const recentMats=state.materials.slice().sort((a,b)=>b.addedAt-a.addedAt).slice(0,6);
+
+  const syncBanner=!dirHandle?`
+    <div class="setup-banner">
+      <span style="font-size:22px">📬</span>
+      <div class="setup-banner-text">
+        <strong>メール通知を有効にするには同期フォルダの設定が必要です</strong>
+        「通知設定」タブからセットアップしてください
+      </div>
+      <button class="btn btn-secondary" onclick="navigate('settings')" style="white-space:nowrap">設定する →</button>
+    </div>`:'';
+
+  document.getElementById('content').innerHTML=`
+    ${syncBanner}
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">登録科目</div><div class="stat-value">${state.courses.length}</div><div class="stat-sub">科目</div></div>
+      <div class="stat-card"><div class="stat-label">課題（未完了）</div><div class="stat-value" style="color:${overdue?'var(--danger)':'var(--primary-dark)'}">${pending}</div><div class="stat-sub">${overdue?`うち期限切れ ${overdue}件`:'件'}</div></div>
+      <div class="stat-card"><div class="stat-label">完了済み課題</div><div class="stat-value" style="color:var(--success)">${done}</div><div class="stat-sub">/ 全${total}件</div></div>
+      <div class="stat-card"><div class="stat-label">登録資料</div><div class="stat-value">${state.materials.length}</div><div class="stat-sub">ファイル</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⏰ 締切が近い課題</div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="navigate('tasks')">すべて見る →</button>
+        </div>
+        ${upcoming.length
+          ?`<div class="task-list">${upcoming.map(t=>taskItemHTML(t,true)).join('')}</div>`
+          :`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">締切設定済みの未完了課題なし</div></div>`}
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📁 最近追加した資料</div>
+          <button class="btn btn-ghost" style="font-size:12px" onclick="navigate('materials')">すべて見る →</button>
+        </div>
+        ${recentMats.length
+          ?`<div class="mat-grid">${recentMats.map(m=>matCardHTML(m)).join('')}</div>`
+          :`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">資料なし</div></div>`}
+      </div>
+    </div>
+
+    ${state.courses.length?`
+    <div class="sep"></div>
+    <div class="section-header"><div class="section-title">📚 科目別 課題状況</div></div>
+    <div class="courses-grid">
+      ${state.courses.map(c=>{
+        const ct=tasks.filter(t=>t.courseId===c.id);
+        const cd=ct.filter(t=>t.status==='done').length;
+        const cm=state.materials.filter(m=>m.courseId===c.id).length;
+        return `<div class="course-card" style="border-left-color:${c.color}">
+          <div class="course-card-top"><div><div class="course-name">${esc(c.name)}</div>${c.slot?`<div class="course-detail">${esc(c.slot)}</div>`:''}</div></div>
+          <div class="course-stats-row">
+            <div class="cstat"><div class="cstat-val">${ct.length}</div><div class="cstat-label">課題</div></div>
+            <div class="cstat"><div class="cstat-val" style="color:var(--success)">${cd}</div><div class="cstat-label">完了</div></div>
+            <div class="cstat"><div class="cstat-val">${cm}</div><div class="cstat-label">資料</div></div>
+          </div></div>`;
+      }).join('')}
+    </div>`:''}
+  `;
+}
+
+// ══════════════════════════════════════════
+// Tasks
+// ══════════════════════════════════════════
+function renderTasks(){
+  let tasks=state.tasks;
+  const f=state.taskFilter,q=state.taskSearch.toLowerCase();
+
+  if(f==='todo') tasks=tasks.filter(t=>t.status==='todo');
+  else if(f==='in-progress') tasks=tasks.filter(t=>t.status==='in-progress');
+  else if(f==='done') tasks=tasks.filter(t=>t.status==='done');
+  else if(f==='overdue') tasks=tasks.filter(t=>t.status!=='done'&&t.due&&new Date(t.due)<new Date());
+
+  if(q) tasks=tasks.filter(t=>t.title.toLowerCase().includes(q)||(t.note||'').toLowerCase().includes(q));
+
+  tasks=tasks.slice().sort((a,b)=>{
+    if(a.status==='done'&&b.status!=='done') return 1;
+    if(a.status!=='done'&&b.status==='done') return -1;
+    if(!a.due&&!b.due) return 0;
+    if(!a.due) return 1;if(!b.due) return -1;
+    return new Date(a.due)-new Date(b.due);
+  });
+
+  document.getElementById('content').innerHTML=`
+    <div class="filter-bar">
+      <input class="search-box" placeholder="🔍 課題を検索..." value="${esc(state.taskSearch)}" oninput="state.taskSearch=this.value;renderContent()">
+      ${['all','todo','in-progress','done','overdue'].map(v=>`
+        <button class="filter-btn${state.taskFilter===v?' active':''}" onclick="state.taskFilter='${v}';renderContent()">
+          ${{all:'すべて',todo:'未着手','in-progress':'進行中',done:'完了',overdue:'期限切れ'}[v]}
+        </button>`).join('')}
+    </div>
+    ${tasks.length
+      ?`<div class="task-list">${tasks.map(t=>taskItemHTML(t,false)).join('')}</div>`
+      :`<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">課題なし</div><div class="empty-sub">右上の「＋ 課題を追加」から追加してください</div></div>`}
+  `;
+}
+
+function taskItemHTML(t,compact){
+  const c=getCourse(t.courseId);
+  const checkCls=t.status==='done'?'done':t.status==='in-progress'?'in-progress':'';
+  const checkIcon=t.status==='done'?'✓':t.status==='in-progress'?'…':'';
+  return `<div class="task-item">
+    <div class="task-check ${checkCls}" onclick="cycleStatus('${t.id}')">${checkIcon}</div>
+    <div class="task-info">
+      <div class="task-title${t.status==='done'?' done':''}">${esc(t.title)}</div>
+      <div class="task-meta">
+        ${priorityDot(t.priority)}
+        ${c?`<span class="badge badge-course" style="background:${c.color}22;color:${c.color}">${esc(c.name)}</span>`:''}
+        ${dueBadge(t.due)}
+        ${t.note&&!compact?`<span style="font-size:11px;color:var(--muted)">📝 ${esc(t.note.slice(0,40))}${t.note.length>40?'…':''}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="icon-btn" onclick="editTask('${t.id}')">✏️</button>
+      <button class="icon-btn" onclick="deleteTask('${t.id}')">🗑️</button>
+    </div>
+  </div>`;
+}
+
+function cycleStatus(id){
+  const t=state.tasks.find(x=>x.id===id);if(!t)return;
+  const cycle={todo:'in-progress','in-progress':'done',done:'todo'};
+  t.status=cycle[t.status]||'todo';
+  saveState();renderContent();
+}
+
+// ══════════════════════════════════════════
+// Materials
+// ══════════════════════════════════════════
+function renderMaterials(){
+  const f=state.matFilter;
+  let mats=state.materials;
+  if(f&&f!=='all') mats=mats.filter(m=>m.courseId===f);
+
+  const grouped={};
+  mats.forEach(m=>{const key=m.courseId||'__none__';if(!grouped[key])grouped[key]=[];grouped[key].push(m)});
+
+  const courseOptions=state.courses.map(c=>`
+    <button class="filter-btn${state.matFilter===c.id?' active':''}" onclick="state.matFilter='${c.id}';renderContent()" style="${state.matFilter===c.id?`background:${c.color};border-color:${c.color}`:''}">
+      ${esc(c.name)}</button>`).join('');
+
+  document.getElementById('content').innerHTML=`
+    <div class="filter-bar">
+      <button class="filter-btn${f==='all'?' active':''}" onclick="state.matFilter='all';renderContent()">すべて</button>
+      ${courseOptions}
+    </div>
+    ${!mats.length?`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">資料なし</div><div class="empty-sub">右上の「＋ 資料を追加」からファイルを登録してください</div></div>`:''}
+    ${Object.keys(grouped).map(key=>{
+      const c=getCourse(key);
+      return `<div class="materials-section">
+        <div class="materials-section-title">
+          <span style="width:10px;height:10px;border-radius:50%;background:${c?c.color:'var(--muted)'};display:inline-block;flex-shrink:0"></span>
+          ${esc(c?c.name:'科目未設定')}
+          <span style="font-size:12px;color:var(--muted);font-weight:400">${grouped[key].length}件</span>
+        </div>
+        <div class="mat-grid">${grouped[key].map(m=>matCardHTML(m)).join('')}</div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function matCardHTML(m){
+  return `<div class="mat-card" onclick="viewMaterial('${m.id}')">
+    <div class="mat-icon">${fileIcon(m.type)}</div>
+    <div class="mat-name">${esc(m.name)}</div>
+    <div class="mat-meta">${fmtSize(m.size)} · ${fmtDate(m.addedAt)}</div>
+    <button class="icon-btn mat-del" onclick="event.stopPropagation();deleteMaterial('${m.id}')">🗑️</button>
+  </div>`;
+}
+
+async function viewMaterial(id){
+  const mat=state.materials.find(m=>m.id===id);if(!mat)return;
+  const rec=await dbGet('files',id);
+  if(!rec){alert('ファイルデータが見つかりません');return}
+  const blob=new Blob([rec.data],{type:mat.type});
+  const url=URL.createObjectURL(blob);
+  document.getElementById('viewer-title').textContent=mat.name;
+  const body=document.getElementById('viewer-body');
+  if(mat.type.includes('pdf')||mat.type.includes('image')){
+    body.innerHTML=`<iframe src="${url}"></iframe>`;
+  } else {
+    body.innerHTML=`<div class="viewer-no-preview"><div style="font-size:48px">${fileIcon(mat.type)}</div><div style="font-weight:500">${esc(mat.name)}</div><div style="font-size:12px;color:var(--muted)">このファイル形式はプレビューできません。ダウンロードして開いてください。</div></div>`;
+  }
+  const dlBtn=document.getElementById('viewer-dl-btn');
+  dlBtn.onclick=()=>{const a=document.createElement('a');a.href=url;a.download=mat.name;a.click()};
+  openModal('viewer-modal');
+}
+
+// ══════════════════════════════════════════
+// Courses
+// ══════════════════════════════════════════
+function renderCourses(){
+  const el=document.getElementById('content');
+  if(!state.courses.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📚</div><div class="empty-text">科目が未登録です</div><div class="empty-sub">右上の「＋ 科目を追加」から追加してください</div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="courses-grid">${state.courses.map(c=>{
+    const ct=state.tasks.filter(t=>t.courseId===c.id);
+    const cd=ct.filter(t=>t.status==='done').length;
+    const cm=state.materials.filter(m=>m.courseId===c.id).length;
+    return `<div class="course-card" style="border-left-color:${c.color}">
+      <div class="course-card-top">
+        <div>
+          <div class="course-name">${esc(c.name)}</div>
+          ${c.prof?`<div class="course-detail">👤 ${esc(c.prof)}</div>`:''}
+          ${c.slot?`<div class="course-detail">🕐 ${esc(c.slot)}</div>`:''}
+          ${c.note?`<div class="course-detail">📝 ${esc(c.note.slice(0,50))}${c.note.length>50?'…':''}</div>`:''}
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="icon-btn" onclick="editCourse('${c.id}')">✏️</button>
+          <button class="icon-btn" onclick="deleteCourse('${c.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="course-stats-row">
+        <div class="cstat"><div class="cstat-val">${ct.length}</div><div class="cstat-label">課題</div></div>
+        <div class="cstat"><div class="cstat-val" style="color:var(--success)">${cd}</div><div class="cstat-label">完了</div></div>
+        <div class="cstat"><div class="cstat-val">${cm}</div><div class="cstat-label">資料</div></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════
+// Settings / Notification
+// ══════════════════════════════════════════
+function renderSettings(){
+  const synced=!!dirHandle;
+  const folderName=dirHandle?dirHandle.name:'未設定';
+
+  document.getElementById('content').innerHTML=`
+    <div style="max-width:720px">
+
+      <!-- Step 1: Folder sync -->
+      <div class="settings-section">
+        <div class="settings-section-title">📂 ステップ1 — フォルダ同期の設定</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          課題データを <code>data.json</code> として自動保存します。<br>
+          「大学授業」フォルダを選択してください（<code>notify.py</code> と同じフォルダ）。
+        </p>
+        <div class="settings-row">
+          <div>
+            <div class="settings-label">同期フォルダ</div>
+            <div class="settings-sub">${synced?`📁 ${esc(folderName)}`:'未選択'}</div>
+          </div>
+          <button class="btn ${synced?'btn-secondary':'btn-primary'}" onclick="setupDirectory()">
+            ${synced?'フォルダを変更':'📂 フォルダを選択'}
+          </button>
+        </div>
+        ${synced?`<div class="settings-row">
+          <div>
+            <div class="settings-label">今すぐ同期</div>
+            <div class="settings-sub">data.json を手動で書き出します</div>
+          </div>
+          <button class="btn btn-secondary" onclick="syncToFile().then(()=>alert('同期しました'))">🔄 同期する</button>
+        </div>`:''}
+      </div>
+
+      <!-- Step 2: config.json -->
+      <div class="settings-section">
+        <div class="settings-section-title">📧 ステップ2 — メール設定ファイルを編集</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          「大学授業」フォルダ内の <code>config.json</code> をテキストエディタで開いて、
+          Gmailアドレスとアプリパスワードを入力してください。
+        </p>
+        <div class="code-block">{
+  "from_email": "あなたのGmailアドレス@gmail.com",
+  "app_password": "xxxx xxxx xxxx xxxx",
+  "to_email":   "通知を受け取るメールアドレス@gmail.com"
+}</div>
+        <div style="margin-top:12px;padding:12px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534">
+          ℹ️ <strong>Gmailアプリパスワードの取得方法：</strong>
+          Googleアカウント → セキュリティ → 2段階認証を有効化 → 「アプリパスワード」で16桁のパスワードを生成
+        </div>
+      </div>
+
+      <!-- Step 3: Task Scheduler -->
+      <div class="settings-section">
+        <div class="settings-section-title">⏰ ステップ3 — 自動実行の設定</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          <code>setup_scheduler.bat</code> をダブルクリックすると、毎朝8:00に自動でメール通知スクリプトが実行されます。
+        </p>
+        <ul class="step-list">
+          <li><span class="step-num">1</span><span>Pythonがインストールされていることを確認（<code>python --version</code> で確認）</span></li>
+          <li><span class="step-num">2</span><span>「大学授業」フォルダ内の <code>config.json</code> を編集してメールアドレスを設定</span></li>
+          <li><span class="step-num">3</span><span><code>setup_scheduler.bat</code> を右クリック →「管理者として実行」</span></li>
+          <li><span class="step-num">4</span><span>Windowsタスクスケジューラに「大学授業通知」として登録されれば完了</span></li>
+        </ul>
+        <div style="margin-top:12px">
+          <button class="btn btn-secondary" onclick="testNotify()">🧪 通知テスト（コンソール確認）</button>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function testNotify(){
+  const today=new Date();
+  const targets=state.tasks.filter(t=>{
+    if(t.status==='done'||!t.due) return false;
+    const due=new Date(t.due);due.setHours(23,59,59);
+    const diff=Math.ceil((due-today)/(864e5));
+    return diff>=0&&diff<=2;
+  });
+  if(!targets.length){alert('現在、締切2日以内の未完了課題はありません。\n（通知対象なし）');return}
+  const lines=targets.map(t=>{
+    const c=getCourse(t.courseId);
+    const due=new Date(t.due);due.setHours(23,59,59);
+    const diff=Math.ceil((due-today)/(864e5));
+    return `・${t.title} [${c?c.name:'科目未設定'}] 締切: ${t.due}（あと${diff}日）`;
+  });
+  alert(`【通知対象の課題】\n\n${lines.join('\n')}\n\n↑ これらのメールが送信されます。\n（notify.pyがconfig.jsonの設定で送信します）`);
+}
+
+// ══════════════════════════════════════════
+// Modal helpers
+// ══════════════════════════════════════════
+function openModal(id){document.getElementById(id).classList.remove('hidden')}
+function closeModal(id){document.getElementById(id).classList.add('hidden')}
+document.querySelectorAll('.overlay').forEach(el=>{
+  el.addEventListener('click',e=>{if(e.target===el) el.classList.add('hidden')});
+});
+
+// ══════════════════════════════════════════
+// Course CRUD
+// ══════════════════════════════════════════
+function openCourseModal(id=null){
+  document.getElementById('course-edit-id').value=id||'';
+  if(id){
+    const c=getCourse(id);
+    document.getElementById('course-modal-title').textContent='科目を編集';
+    document.getElementById('course-name').value=c.name;
+    document.getElementById('course-color').value=c.color;
+    document.getElementById('course-prof').value=c.prof||'';
+    document.getElementById('course-slot').value=c.slot||'';
+    document.getElementById('course-note').value=c.note||'';
+  } else {
+    document.getElementById('course-modal-title').textContent='科目を追加';
+    ['course-name','course-prof','course-slot','course-note'].forEach(id=>document.getElementById(id).value='');
+  }
+  openModal('course-modal');
+}
+
+function saveCourse(){
+  const name=document.getElementById('course-name').value.trim();
+  if(!name){alert('科目名を入力してください');return}
+  const id=document.getElementById('course-edit-id').value;
+  const data={name,color:document.getElementById('course-color').value,
+    prof:document.getElementById('course-prof').value.trim(),
+    slot:document.getElementById('course-slot').value.trim(),
+    note:document.getElementById('course-note').value.trim()};
+  if(id){Object.assign(getCourse(id),data)}
+  else{state.courses.push({id:uid(),...data})}
+  saveState();closeModal('course-modal');renderCourseNav();renderContent();
+}
+function editCourse(id){openCourseModal(id)}
+function deleteCourse(id){
+  confirm2('この科目を削除しますか？',()=>{
+    state.courses=state.courses.filter(c=>c.id!==id);
+    saveState();renderCourseNav();renderContent();
+  });
+}
+
+// ══════════════════════════════════════════
+// Task CRUD
+// ══════════════════════════════════════════
+function populateCourseSelect(selId,val=''){
+  const sel=document.getElementById(selId);
+  sel.innerHTML='<option value="">-- 科目を選択 --</option>'+
+    state.courses.map(c=>`<option value="${c.id}"${c.id===val?' selected':''}>${esc(c.name)}</option>`).join('');
+}
+
+function openTaskModal(id=null){
+  const editTask=id?state.tasks.find(t=>t.id===id):null;
+  populateCourseSelect('task-course',editTask?.courseId||'');
+  document.getElementById('task-edit-id').value=id||'';
+  if(editTask){
+    document.getElementById('task-modal-title').textContent='課題を編集';
+    document.getElementById('task-title-input').value=editTask.title;
+    document.getElementById('task-course').value=editTask.courseId||'';
+    document.getElementById('task-priority').value=editTask.priority||'medium';
+    document.getElementById('task-due').value=editTask.due||'';
+    document.getElementById('task-status').value=editTask.status||'todo';
+    document.getElementById('task-note').value=editTask.note||'';
+  } else {
+    document.getElementById('task-modal-title').textContent='課題を追加';
+    document.getElementById('task-title-input').value='';
+    document.getElementById('task-priority').value='medium';
+    document.getElementById('task-due').value='';
+    document.getElementById('task-status').value='todo';
+    document.getElementById('task-note').value='';
+  }
+  openModal('task-modal');
+}
+
+function saveTask(){
+  const title=document.getElementById('task-title-input').value.trim();
+  if(!title){alert('課題名を入力してください');return}
+  const id=document.getElementById('task-edit-id').value;
+  const data={title,courseId:document.getElementById('task-course').value,
+    priority:document.getElementById('task-priority').value,
+    due:document.getElementById('task-due').value,
+    status:document.getElementById('task-status').value,
+    note:document.getElementById('task-note').value.trim()};
+  if(id){Object.assign(state.tasks.find(t=>t.id===id),data)}
+  else{state.tasks.push({id:uid(),createdAt:Date.now(),...data})}
+  saveState();closeModal('task-modal');renderContent();
+}
+function editTask(id){openTaskModal(id)}
+function deleteTask(id){
+  confirm2('この課題を削除しますか？',()=>{
+    state.tasks=state.tasks.filter(t=>t.id!==id);saveState();renderContent();
+  });
+}
+
+// ══════════════════════════════════════════
+// Material CRUD
+// ══════════════════════════════════════════
+let pendingFiles=[];
+
+function openMatModal(){
+  populateCourseSelect('mat-course');pendingFiles=[];
+  document.getElementById('selected-files').innerHTML='';
+  openModal('mat-modal');
+}
+function clearFileSelection(){pendingFiles=[];document.getElementById('selected-files').innerHTML=''}
+
+function renderPendingFiles(){
+  document.getElementById('selected-files').innerHTML=pendingFiles.map((f,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-radius:8px;font-size:12px">
+      <span>${fileIcon(f.type)}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}</span>
+      <span style="color:var(--muted)">${fmtSize(f.size)}</span>
+      <button class="icon-btn" style="width:24px;height:24px;font-size:12px" onclick="pendingFiles.splice(${i},1);renderPendingFiles()">✕</button>
+    </div>`).join('');
+}
+
+document.getElementById('file-input').addEventListener('change',e=>{
+  [...e.target.files].forEach(f=>pendingFiles.push(f));renderPendingFiles();e.target.value='';
+});
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');[...e.dataTransfer.files].forEach(f=>pendingFiles.push(f));renderPendingFiles()});
+
+async function saveMaterials(){
+  if(!pendingFiles.length){alert('ファイルを選択してください');return}
+  const courseId=document.getElementById('mat-course').value;
+  for(const file of pendingFiles){
+    const id=uid();
+    const buf=await file.arrayBuffer();
+    await dbPut('files',{id,data:buf});
+    state.materials.unshift({id,courseId,name:file.name,type:file.type,size:file.size,addedAt:Date.now()});
+  }
+  saveState();closeModal('mat-modal');clearFileSelection();renderContent();
+}
+
+async function deleteMaterial(id){
+  confirm2('この資料を削除しますか？',async()=>{
+    state.materials=state.materials.filter(m=>m.id!==id);
+    await dbDel('files',id);saveState();renderContent();
+  });
+}
+
+// ══════════════════════════════════════════
+// Confirm dialog
+// ══════════════════════════════════════════
+function confirm2(msg,cb){
+  document.getElementById('confirm-msg').textContent=msg;
+  const btn=document.getElementById('confirm-ok');
+  const nb=btn.cloneNode(true);btn.parentNode.replaceChild(nb,btn);
+  nb.addEventListener('click',()=>{closeModal('confirm-modal');cb()});
+  openModal('confirm-modal');
+}
+
+// ══════════════════════════════════════════
+// Init
+// ══════════════════════════════════════════
+openDB().then(async()=>{
+  loadState();
+  await loadDirHandle();
+  renderCourseNav();
+  navigate('dashboard');
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.overlay:not(.hidden)').forEach(el=>el.classList.add('hidden'));
+});
+</script>
+</body>
+</html>
